@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Face Puzzle — Main Menu{% endblock %}
+
+{% block content %}
+<div class="menu-bg">
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+
+    <div class="menu-container">
+        <!-- Logo / Title -->
+        <div class="menu-header">
+            <div class="logo-icon">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="24" height="24" rx="4" stroke="url(#g1)" stroke-width="3"/>
+                    <rect x="36" y="4" width="24" height="24" rx="4" stroke="url(#g2)" stroke-width="3"/>
+                    <rect x="4" y="36" width="24" height="24" rx="4" stroke="url(#g2)" stroke-width="3"/>
+                    <rect x="36" y="36" width="24" height="24" rx="4" stroke="url(#g1)" stroke-width="3"/>
+                    <circle cx="16" cy="20" r="3" fill="#00f0ff"/>
+                    <circle cx="48" cy="20" r="3" fill="#b44aff"/>
+                    <path d="M10 52 Q16 58 22 52" stroke="#00f0ff" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    <defs>
+                        <linearGradient id="g1" x1="0" y1="0" x2="64" y2="64">
+                            <stop stop-color="#00f0ff"/><stop offset="1" stop-color="#b44aff"/>
+                        </linearGradient>
+                        <linearGradient id="g2" x1="64" y1="0" x2="0" y2="64">
+                            <stop stop-color="#b44aff"/><stop offset="1" stop-color="#00f0ff"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <h1 class="menu-title">FACE<span class="title-accent">PUZZLE</span></h1>
+            <p class="menu-subtitle">Solve puzzles with your hands</p>
+        </div>
+
+        <!-- Player Name Input -->
+        <div class="menu-card" id="card-name">
+            <div class="card-label">PLAYER NAME</div>
+            <div class="name-inputs">
+                <div class="input-group">
+                    <input type="text" id="input-p1-name" class="neon-input" placeholder="Enter your name..." maxlength="20" autocomplete="off">
+                    <span class="input-tag">P1</span>
+                </div>
+                <div class="input-group" id="p2-name-group" style="display:none;">
+                    <input type="text" id="input-p2-name" class="neon-input" placeholder="Player 2 name..." maxlength="20" autocomplete="off">
+                    <span class="input-tag tag-purple">P2</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Mode -->
+        <div class="menu-card" id="card-mode">
+            <div class="card-label">PLAYER MODE</div>
+            <div class="btn-group" id="mode-group">
+                <button class="sel-btn active" data-value="1p" id="btn-1p">
+                    <span class="sel-icon">👤</span>
+                    <span class="sel-text">1 Player</span>
+                    <span class="sel-desc">Speedrun</span>
+                </button>
+                <button class="sel-btn" data-value="2p" id="btn-2p">
+                    <span class="sel-icon">👥</span>
+                    <span class="sel-text">2 Players</span>
+                    <span class="sel-desc">Split Screen</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Source Mode -->
+        <div class="menu-card" id="card-source">
+            <div class="card-label">SOURCE</div>
+            <div class="btn-group" id="source-group">
+                <button class="sel-btn active" data-value="camera" id="btn-camera">
+                    <span class="sel-icon">📸</span>
+                    <span class="sel-text">Face Record</span>
+                    <span class="sel-desc">Use Camera</span>
+                </button>
+                <button class="sel-btn disabled" data-value="form" id="btn-form" disabled>
+                    <span class="sel-icon">🖼️</span>
+                    <span class="sel-text">Form</span>
+                    <span class="sel-desc coming-soon">Coming Soon</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Rounds -->
+        <div class="menu-card" id="card-rounds">
+            <div class="card-label">ROUNDS</div>
+            <div class="btn-group rounds-group" id="rounds-group">
+                <button class="sel-btn round-btn active" data-value="1">1</button>
+                <button class="sel-btn round-btn" data-value="3">3</button>
+                <button class="sel-btn round-btn" data-value="5">5</button>
+                <button class="sel-btn round-btn" data-value="7">7</button>
+            </div>
+        </div>
+
+        <!-- Start Button -->
+        <button class="start-btn" id="btn-start">
+            <span class="start-text">START GAME</span>
+            <span class="start-arrow">→</span>
+        </button>
+
+        <!-- Leaderboard Link -->
+        <a href="{% url 'facepuzzle:leaderboard' %}" class="leaderboard-link" id="link-leaderboard">
+            🏆 View Leaderboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function() {
+    // State
+    let mode = '1p';
+    let source = 'camera';
+    let rounds = 1;
+
+    // Selector logic
+    function setupGroup(groupId, callback) {
+        const group = document.getElementById(groupId);
+        group.querySelectorAll('.sel-btn:not(.disabled)').forEach(btn => {
+            btn.addEventListener('click', () => {
+                group.querySelectorAll('.sel-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                callback(btn.dataset.value);
+            });
+        });
+    }
+
+    setupGroup('mode-group', val => {
+        mode = val;
+        document.getElementById('p2-name-group').style.display = val === '2p' ? 'flex' : 'none';
+    });
+    setupGroup('source-group', val => { source = val; });
+    setupGroup('rounds-group', val => { rounds = parseInt(val); });
+
+    // Start
+    document.getElementById('btn-start').addEventListener('click', () => {
+        const p1 = document.getElementById('input-p1-name').value.trim() || 'Player 1';
+        const p2 = document.getElementById('input-p2-name').value.trim() || 'Player 2';
+        if (!document.getElementById('input-p1-name').value.trim()) {
+            document.getElementById('input-p1-name').classList.add('shake');
+            document.getElementById('input-p1-name').focus();
+            setTimeout(() => document.getElementById('input-p1-name').classList.remove('shake'), 600);
+            return;
+        }
+        if (mode === '2p' && !document.getElementById('input-p2-name').value.trim()) {
+            document.getElementById('input-p2-name').classList.add('shake');
+            document.getElementById('input-p2-name').focus();
+            setTimeout(() => document.getElementById('input-p2-name').classList.remove('shake'), 600);
+            return;
+        }
+        const params = new URLSearchParams({ mode, rounds, p1, p2 });
+        window.location.href = `/game/?${params.toString()}`;
+    });
+})();
+</script>
+{% endblock %}

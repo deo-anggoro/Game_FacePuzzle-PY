@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Face Puzzle — Leaderboard{% endblock %}
+
+{% block content %}
+<div class="menu-bg">
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <div class="menu-container leaderboard-container">
+        <div class="menu-header">
+            <h1 class="menu-title">🏆 LEADER<span class="title-accent">BOARD</span></h1>
+            <p class="menu-subtitle">Top puzzle solvers</p>
+        </div>
+
+        <div class="menu-card leaderboard-card">
+            {% if entries %}
+            <table class="lb-table" id="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Player</th>
+                        <th>Mode</th>
+                        <th>Time</th>
+                        <th>Rounds</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                    <tr class="{% if forloop.counter <= 3 %}top-three rank-{{ forloop.counter }}{% endif %}">
+                        <td class="rank-col">
+                            {% if forloop.counter == 1 %}🥇
+                            {% elif forloop.counter == 2 %}🥈
+                            {% elif forloop.counter == 3 %}🥉
+                            {% else %}{{ forloop.counter }}
+                            {% endif %}
+                        </td>
+                        <td class="name-col">{{ entry.player_name }}</td>
+                        <td class="mode-col">
+                            <span class="mode-badge badge-{{ entry.mode }}">{{ entry.mode|upper }}</span>
+                        </td>
+                        <td class="time-col" data-seconds="{{ entry.best_time }}">{{ entry.best_time|floatformat:1 }}s</td>
+                        <td class="rounds-col">{{ entry.rounds_won }}/{{ entry.total_rounds }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="lb-empty">
+                <span class="lb-empty-icon">🎮</span>
+                <p>No scores yet. Be the first to play!</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <a href="{% url 'facepuzzle:menu' %}" class="start-btn btn-secondary" id="btn-back-menu">
+            <span class="start-text">← Back to Menu</span>
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.querySelectorAll('.time-col[data-seconds]').forEach(td => {
+    const secs = parseFloat(td.dataset.seconds);
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    const ms = Math.floor((secs % 1) * 10);
+    td.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${ms}`;
+});
+</script>
+{% endblock %}

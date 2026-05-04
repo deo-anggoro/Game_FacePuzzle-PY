@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Face Puzzle — Game{% endblock %}
+
+{% block extra_head %}
+<!-- MediaPipe -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+<div class="game-bg">
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <!-- HUD -->
+    <div class="game-hud" id="game-hud">
+        <div class="hud-left">
+            <span class="hud-label">ROUND</span>
+            <span class="hud-value" id="hud-round">1 / {{ rounds }}</span>
+        </div>
+        <div class="hud-center">
+            <span class="hud-timer" id="hud-timer">00:00.0</span>
+        </div>
+        <div class="hud-right">
+            <button class="hud-btn" id="btn-back" title="Back to Menu">✕</button>
+        </div>
+    </div>
+
+    <!-- PHASE: CAPTURE -->
+    <div class="phase phase-capture active" id="phase-capture">
+        <div class="capture-container">
+            <h2 class="phase-title" id="capture-title">📸 Capture Your Face</h2>
+            <p class="phase-desc" id="capture-desc">Position your face in front of the camera</p>
+            <div class="camera-wrapper">
+                <video id="camera-feed" autoplay playsinline muted></video>
+                <canvas id="camera-overlay" class="camera-overlay"></canvas>
+            </div>
+            <div class="capture-controls">
+                <button class="capture-btn" id="btn-capture">
+                    <span class="capture-ring"></span>
+                    <span class="capture-dot"></span>
+                </button>
+                <p class="capture-hint">Tap to capture</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- PHASE: COUNTDOWN -->
+    <div class="phase phase-countdown" id="phase-countdown">
+        <div class="countdown-number" id="countdown-number">3</div>
+    </div>
+
+    <!-- PHASE: SOLVE (1P) -->
+    <div class="phase phase-solve" id="phase-solve-1p">
+        <div class="puzzle-area single-player">
+            <div class="player-label">
+                <span class="player-name" id="p1-name-label">{{ player1 }}</span>
+            </div>
+            <div class="canvas-wrap">
+                <canvas id="puzzle-canvas-1" class="puzzle-canvas"></canvas>
+                <canvas id="hand-canvas-1" class="hand-canvas"></canvas>
+                <div class="ref-photo" id="ref-photo-1"><img id="ref-img-1" alt="Reference" /></div>
+            </div>
+        </div>
+        <div class="camera-mini-wrap">
+            <video id="camera-mini" autoplay playsinline muted></video>
+        </div>
+    </div>
+
+    <!-- PHASE: SOLVE (2P) -->
+    <div class="phase phase-solve" id="phase-solve-2p">
+        <div class="split-screen">
+            <div class="puzzle-area player-1">
+                <div class="player-label">
+                    <span class="player-name" id="p1-label-2p">{{ player1 }}</span>
+                    <span class="player-timer" id="p1-timer-2p">00:00.0</span>
+                </div>
+                <div class="canvas-wrap">
+                    <canvas id="puzzle-canvas-2p-1" class="puzzle-canvas"></canvas>
+                    <canvas id="hand-canvas-2p-1" class="hand-canvas"></canvas>
+                    <div class="ref-photo" id="ref-photo-2p-1"><img id="ref-img-2p-1" alt="Reference" /></div>
+                </div>
+            </div>
+            <div class="split-divider"></div>
+            <div class="puzzle-area player-2">
+                <div class="player-label">
+                    <span class="player-name" id="p2-label-2p">{{ player2 }}</span>
+                    <span class="player-timer" id="p2-timer-2p">00:00.0</span>
+                </div>
+                <div class="canvas-wrap">
+                    <canvas id="puzzle-canvas-2p-2" class="puzzle-canvas"></canvas>
+                    <canvas id="hand-canvas-2p-2" class="hand-canvas"></canvas>
+                    <div class="ref-photo" id="ref-photo-2p-2"><img id="ref-img-2p-2" alt="Reference" /></div>
+                </div>
+            </div>
+        </div>
+        <div class="camera-mini-wrap">
+            <video id="camera-mini-2p" autoplay playsinline muted></video>
+        </div>
+    </div>
+
+    <!-- PHASE: ROUND RESULT -->
+    <div class="phase phase-result" id="phase-result">
+        <div class="result-card">
+            <div class="result-icon" id="result-icon">🎉</div>
+            <h2 class="result-title" id="result-title">Round Complete!</h2>
+            <div class="result-stats" id="result-stats"></div>
+            <button class="start-btn" id="btn-next-round">
+                <span class="start-text" id="next-round-text">Next Round</span>
+                <span class="start-arrow">→</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- PHASE: FINAL RESULT -->
+    <div class="phase phase-result" id="phase-final">
+        <div class="result-card final-card">
+            <div class="result-icon">🏆</div>
+            <h2 class="result-title" id="final-title">Game Over!</h2>
+            <div class="result-stats" id="final-stats"></div>
+            <div class="final-buttons">
+                <button class="start-btn" id="btn-play-again">
+                    <span class="start-text">Play Again</span>
+                </button>
+                <a href="/" class="start-btn btn-secondary" id="btn-menu">
+                    <span class="start-text">Main Menu</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Game config from Django -->
+<script>
+    window.GAME_CONFIG = {
+        mode: '{{ mode }}',
+        rounds: parseInt('{{ rounds }}'),
+        player1: '{{ player1 }}',
+        player2: '{{ player2 }}',
+        gridSize: 5
+    };
+</script>
+<script src="{% static 'js/mediapipe_handler.js' %}"></script>
+<script src="{% static 'js/game.js' %}"></script>
+{% endblock %}
