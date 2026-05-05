@@ -1,4 +1,4 @@
-ARG PYTHON_VERSION=3.10
+ARG PYTHON_VERSION=3.12
 FROM python:${PYTHON_VERSION}-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -11,4 +11,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-CMD ["sh", "-c", "gunicorn core:wsgi --bind 0.0.0.0:$PORT --log-level debug"]
+CMD ["sh", "-c", "gunicorn project.wsgi:application --bind 0.0.0.0:$PORT"]
